@@ -151,62 +151,6 @@ LIBCXX_CMAKE_FLAGS = \
     -DWASI_SDK_PREFIX=$(BUILD_PREFIX) \
     --debug-trycompile
 
-build/libcxx.BUILT: build/llvm.BUILT build/compiler-rt.BUILT build/wasi-libc.BUILT
-	# Do the build.
-	mkdir -p build/libcxx
-	cd build/libcxx && cmake -G Ninja $(LIBCXX_CMAKE_FLAGS) \
-		-DCMAKE_SYSROOT=$(BUILD_PREFIX)/share/wasi-sysroot \
-		-DCMAKE_C_FLAGS="$(DEBUG_PREFIX_MAP) \
-		-DCMAKE_CXX_FLAGS="$(DEBUG_PREFIX_MAP) \
-		-DLIBCXX_LIBDIR_SUFFIX=$(ESCAPE_SLASH)/wasm32-wasi \
-		$(LLVM_PROJ_DIR)/libcxx
-	ninja $(NINJA_FLAGS) -C build/libcxx
-	# Do the install.
-	DESTDIR=$(DESTDIR) ninja $(NINJA_FLAGS) -C build/libcxx install
-	touch build/libcxx.BUILT
-
-# Flags for libcxxabi.
-LIBCXXABI_CMAKE_FLAGS = \
-    -DCMAKE_C_COMPILER_WORKS=ON \
-    -DCMAKE_CXX_COMPILER_WORKS=ON \
-    -DCMAKE_AR=$(BUILD_PREFIX)/bin/ar \
-    -DCMAKE_MODULE_PATH=$(ROOT_DIR)/cmake \
-    -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
-    -DLIBCXXABI_ENABLE_EXCEPTIONS:BOOL=OFF \
-    -DLIBCXXABI_ENABLE_SHARED:BOOL=OFF \
-    -DLIBCXXABI_SILENT_TERMINATE:BOOL=ON \
-    -DLIBCXXABI_ENABLE_THREADS:BOOL=OFF \
-    -DLIBCXXABI_HAS_PTHREAD_API:BOOL=OFF \
-    -DLIBCXXABI_HAS_EXTERNAL_THREAD_API:BOOL=OFF \
-    -DLIBCXXABI_BUILD_EXTERNAL_THREAD_LIBRARY:BOOL=OFF \
-    -DLIBCXXABI_HAS_WIN32_THREAD_API:BOOL=OFF \
-    -DLIBCXXABI_ENABLE_PIC:BOOL=OFF \
-    -DCXX_SUPPORTS_CXX11=ON \
-    -DLLVM_COMPILER_CHECKED=ON \
-    -DCMAKE_BUILD_TYPE=RelWithDebugInfo \
-    -DLIBCXXABI_LIBCXX_PATH=$(LLVM_PROJ_DIR)/libcxx \
-    -DLIBCXXABI_LIBCXX_INCLUDES=$(BUILD_PREFIX)/share/wasi-sysroot/include/c++/v1 \
-    -DLLVM_CONFIG_PATH=$(ROOT_DIR)/build/llvm/bin/llvm-config \
-    -DCMAKE_TOOLCHAIN_FILE=$(ROOT_DIR)/wasi-sdk.cmake \
-    -DCMAKE_STAGING_PREFIX=$(PREFIX)/share/wasi-sysroot \
-    -DWASI_SDK_PREFIX=$(BUILD_PREFIX) \
-    -DUNIX:BOOL=ON \
-    --debug-trycompile
-
-build/libcxxabi.BUILT: build/libcxx.BUILT build/llvm.BUILT
-	# Do the build.
-	mkdir -p build/libcxxabi
-	cd build/libcxxabi && cmake -G Ninja $(LIBCXXABI_CMAKE_FLAGS) \
-		-DCMAKE_SYSROOT=$(BUILD_PREFIX)/share/wasi-sysroot \
-		-DCMAKE_C_FLAGS="$(DEBUG_PREFIX_MAP) \
-		-DCMAKE_CXX_FLAGS="$(DEBUG_PREFIX_MAP) \
-		-DLIBCXXABI_LIBDIR_SUFFIX=$(ESCAPE_SLASH)/wasm32-wasi \
-		$(LLVM_PROJ_DIR)/libcxxabi
-	ninja $(NINJA_FLAGS) -C build/libcxxabi
-	# Do the install.
-	DESTDIR=$(DESTDIR) ninja $(NINJA_FLAGS) -C build/libcxxabi install
-	touch build/libcxxabi.BUILT
-
 build/config.BUILT:
 	mkdir -p $(BUILD_PREFIX)/share/misc
 	cp src/config/config.sub src/config/config.guess $(BUILD_PREFIX)/share/misc
@@ -214,7 +158,7 @@ build/config.BUILT:
 	cp wasi-sdk.cmake $(BUILD_PREFIX)/share/cmake
 	touch build/config.BUILT
 
-build: build/llvm.BUILT build/wasi-libc.BUILT build/compiler-rt.BUILT build/libcxxabi.BUILT build/libcxx.BUILT build/config.BUILT
+build: build/llvm.BUILT build/wasi-libc.BUILT build/compiler-rt.BUILT build/config.BUILT
 
 strip: build/llvm.BUILT
 	./strip_symbols.sh $(BUILD_PREFIX)
